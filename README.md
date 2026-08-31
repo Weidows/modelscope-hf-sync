@@ -23,7 +23,7 @@
 |--------|------|------|----------|
 | `MODELSCOPE_TOKEN` | 是（任意方向） | ModelScope 访问令牌 | https://modelscope.cn → 我的 → 访问令牌 |
 | `HF_TOKEN` | 是（任意方向） | HuggingFace 访问令牌 | https://huggingface.co → Settings → Access Tokens |
-| `MS_ENDPOINT` | 否 | ModelScope 站点地址，默认 `https://modelscope.cn`；国际站填 `https://www.modelscope.ai` | — |
+| `MS_ENDPOINT` | 否 | ModelScope 站点地址，默认 `https://modelscope.cn`（与 `modelscope.cn` 同一账号体系；国际站 `www.modelscope.ai` 是另一套、基本无人使用，请勿填） | — |
 
 > 本地运行时也可直接以环境变量形式导出（见下），不必写成 GitHub Secret。
 

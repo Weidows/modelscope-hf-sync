@@ -71,6 +71,10 @@ jobs:
           MODELSCOPE_TOKEN: ${{ secrets.MODELSCOPE_TOKEN }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           MS_ENDPOINT: ${{ secrets.MS_ENDPOINT }}
+          # Speed up downloads from ModelScope on overseas GitHub runners
+          # (single TCP stream is throttled by trans-Pacific latency).
+          MODELSCOPE_DOWNLOAD_PARALLEL_WORKERS: "8"
+          MODELSCOPE_DOWNLOAD_PARALLEL_THRESHOLD_MB: "50"
         run: |
           set -euo pipefail
           ARGS=(--direction "${{ github.event.inputs.direction }}"

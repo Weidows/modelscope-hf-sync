@@ -190,7 +190,8 @@ def main():
     p.add_argument(
         "--endpoint",
         default=os.environ.get("MS_ENDPOINT", ""),
-        help="ModelScope endpoint (default https://modelscope.cn)",
+        help="ModelScope endpoint (default https://modelscope.cn; "
+             "do NOT use www.modelscope.ai - separate/unused account system)",
     )
     args = p.parse_args()
 
