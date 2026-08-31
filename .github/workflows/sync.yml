@@ -8,18 +8,19 @@ on:
         required: true
         type: choice
         options:
-          - ms2hf
-          - hf2ms
+          - ms2hf   # ModelScope -> HuggingFace
+          - hf2ms   # HuggingFace -> ModelScope
       repo_id:
         description: 'Source repo id, e.g. owner/name (must include the namespace)'
         required: true
         type: string
       repo_type:
-        description: 'Repository type'
-        required: true
+        description: 'Repository type (leave empty to auto-detect)'
+        required: false
         type: choice
-        default: model
+        default: ''
         options:
+          - ''
           - model
           - dataset
       revision:
@@ -73,16 +74,17 @@ jobs:
         run: |
           set -euo pipefail
           ARGS=(--direction "${{ github.event.inputs.direction }}"
-                --repo-id "${{ github.event.inputs.repo_id }}"
-                --repo-type "${{ github.event.inputs.repo_type }}")
+                --repo-id "${{ github.event.inputs.repo_id }}")
+          RT="${{ github.event.inputs.repo_type }}"
           REV="${{ github.event.inputs.revision }}"
           TGT="${{ github.event.inputs.target_repo_id }}"
           ALLOW="${{ github.event.inputs.allow_patterns }}"
           IGNORE="${{ github.event.inputs.ignore_patterns }}"
-          [ -n "$REV" ]    && ARGS+=(--revision "$REV")
-          [ -n "$TGT" ]    && ARGS+=(--target-repo-id "$TGT")
-          [ -n "$ALLOW" ]  && ARGS+=(--allow-patterns "$ALLOW")
-          [ -n "$IGNORE" ] && ARGS+=(--ignore-patterns "$IGNORE")
+          [ -n "$RT" ]     && ARGS+=(--repo-type "$RT")
+          [ -n "$REV" ]     && ARGS+=(--revision "$REV")
+          [ -n "$TGT" ]     && ARGS+=(--target-repo-id "$TGT")
+          [ -n "$ALLOW" ]   && ARGS+=(--allow-patterns "$ALLOW")
+          [ -n "$IGNORE" ]  && ARGS+=(--ignore-patterns "$IGNORE")
           [ "${{ github.event.inputs.private }}" = "true" ] && ARGS+=(--private)
           [ -n "$MS_ENDPOINT" ] && ARGS+=(--endpoint "$MS_ENDPOINT")
           python sync.py "${ARGS[@]}"

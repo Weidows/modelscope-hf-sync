@@ -13,6 +13,7 @@ Authentication (env vars, or CLI flags that override them):
   MS_ENDPOINT        optional, default https://modelscope.cn
                      (use https://www.modelscope.ai for the international site)
 
+The repo type (model / dataset) is auto-detected when --repo-type is omitted.
 The transfer is done by downloading the source repo into a local staging
 directory, then uploading that directory to the target platform. LFS pointers
 are resolved to real files during download, so the mirror stores actual blobs.
@@ -38,6 +39,30 @@ def _ensure_dir(path: str | None, repo_id: str) -> Path:
     d = Path(path) if path else Path(".sync_work") / repo_id.replace("/", "__")
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+# --------------------------------------------------------------------------- #
+# Repo-type auto-detection
+# --------------------------------------------------------------------------- #
+def detect_ms(repo_id, token, endpoint):
+    from modelscope_hub import HubApi, RepoType
+
+    api = HubApi(token=token, endpoint=endpoint or None)
+    for rt in (RepoType.MODEL, RepoType.DATASET):
+        if api.repo_exists(repo_id, rt):
+            return "model" if rt is RepoType.MODEL else "dataset"
+    sys.exit(f"ERROR: '{repo_id}' not found as model or dataset on ModelScope")
+
+
+def detect_hf(repo_id, token):
+    from huggingface_hub import HfApi, ModelInfo, DatasetInfo
+
+    info = HfApi(token=token).repo_info(repo_id, repo_type=None, token=token)
+    if isinstance(info, DatasetInfo):
+        return "dataset"
+    if isinstance(info, ModelInfo):
+        return "model"
+    return getattr(info, "repo_type", "model") or "model"
 
 
 # --------------------------------------------------------------------------- #
@@ -148,7 +173,12 @@ def main():
     )
     p.add_argument("--direction", required=True, choices=["ms2hf", "hf2ms"])
     p.add_argument("--repo-id", required=True, help="source repo id, e.g. owner/name")
-    p.add_argument("--repo-type", default="model", choices=["model", "dataset"])
+    p.add_argument(
+        "--repo-type",
+        default="",
+        choices=["", "model", "dataset"],
+        help="repo type (model/dataset); empty = auto-detect",
+    )
     p.add_argument("--revision", default="", help="branch/revision; empty = platform default")
     p.add_argument("--target-repo-id", default="", help="target repo id; empty = same as source")
     p.add_argument("--workdir", default="", help="local staging dir; empty = .sync_work/<repo>")
@@ -177,7 +207,7 @@ def main():
     hf_token = args.hf_token
 
     print(f"==> direction: {args.direction} ({src} -> {dst})")
-    print(f"==> source:    {args.repo_id} ({args.repo_type})")
+    print(f"==> source:    {args.repo_id}")
     print(f"==> target:    {target_id}")
     print(f"==> staging:   {workdir}")
 
@@ -187,18 +217,24 @@ def main():
             sys.exit("ERROR: MODELSCOPE_TOKEN (--ms-token) is required for ms2hf")
         if not hf_token:
             sys.exit("ERROR: HF_TOKEN (--hf-token) is required for ms2hf")
+        repo_type = args.repo_type or detect_ms(args.repo_id, ms_token, args.endpoint)
+        print(f"==> repo type: {repo_type} (auto-detected)" if not args.repo_type
+              else f"==> repo type: {repo_type}")
         download_modelscope(
-            args.repo_id, args.repo_type, revision, workdir, ms_token, args.endpoint, allow, ignore
+            args.repo_id, repo_type, revision, workdir, ms_token, args.endpoint, allow, ignore
         )
-        upload_hf(target_id, args.repo_type, workdir, hf_token, revision, args.private, allow, ignore)
+        upload_hf(target_id, repo_type, workdir, hf_token, revision, args.private, allow, ignore)
     else:  # hf2ms
         if not hf_token:
             sys.exit("ERROR: HF_TOKEN (--hf-token) is required for hf2ms")
         if not ms_token:
             sys.exit("ERROR: MODELSCOPE_TOKEN (--ms-token) is required for hf2ms")
-        download_hf(args.repo_id, args.repo_type, revision, workdir, hf_token, allow, ignore)
+        repo_type = args.repo_type or detect_hf(args.repo_id, hf_token)
+        print(f"==> repo type: {repo_type} (auto-detected)" if not args.repo_type
+              else f"==> repo type: {repo_type}")
+        download_hf(args.repo_id, repo_type, revision, workdir, hf_token, allow, ignore)
         upload_modelscope(
-            target_id, args.repo_type, workdir, ms_token, revision, args.private, allow, ignore
+            target_id, repo_type, workdir, ms_token, revision, args.private, allow, ignore
         )
 
     print(f"\nDONE: {src} '{args.repo_id}' -> {dst} '{target_id}' in {time.time() - t0:.1f}s")
