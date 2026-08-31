@@ -1,5 +1,10 @@
 # Sync ModelScope ↔ HuggingFace
 
+[![Fork me on GitHub](https://img.shields.io/badge/Fork%20me%20on-GitHub-181717?logo=github&style=for-the-badge)](https://github.com/Weidows/modelscope-hf-sync/fork)
+[![Sync workflow](https://github.com/Weidows/modelscope-hf-sync/actions/workflows/sync.yml/badge.svg)](https://github.com/Weidows/modelscope-hf-sync/actions/workflows/sync.yml)
+[![Python](https://img.shields.io/badge/python-3.11+-blue?logo=python&logoColor=white)](https://www.python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](#)
+
 把模型 / 数据集在 **ModelScope（魔搭）** 和 **HuggingFace** 之间相互迁移的小工具。
 你只需要 **fork 本仓库 → 填好密钥 → 手动点一下（或让 AI agent 帮你跑）**，就能把任意
 `owner/name` 的仓库从一个平台搬到另一个平台。
