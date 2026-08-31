@@ -5,6 +5,7 @@
 - 单文件脚本 `sync.py`，本地直接跑，也适配 **GitHub Actions 手动触发**。
 - 手动触发时可选 **方向** 并 **填写项目名**，两边密钥走仓库 **Secrets**。
 - 同步方式：先把源仓库下载到本地临时目录，再上传到目标平台。下载时会把 LFS 指针解析成真实文件，所以镜像存的是真实数据。
+- `--repo-type` 不填时**自动判断**是 model 还是 dataset。
 
 ## 方向说明
 
@@ -13,18 +14,31 @@
 | `ms2hf`   | ModelScope → HuggingFace |
 | `hf2ms`   | HuggingFace → ModelScope |
 
+## GitHub 上需要设置的环境变量（Repository Secrets）
+
+在仓库 **Settings → Secrets and variables → Actions → Secrets → New repository secret** 里添加。
+脚本通过环境变量读取它们（GitHub Actions 里就是 Secrets）。
+
+| 变量名 | 必填 | 作用 | 获取地址 |
+|--------|------|------|----------|
+| `MODELSCOPE_TOKEN` | 是（任意方向） | ModelScope 访问令牌 | https://modelscope.cn → 我的 → 访问令牌 |
+| `HF_TOKEN` | 是（任意方向） | HuggingFace 访问令牌 | https://huggingface.co → Settings → Access Tokens |
+| `MS_ENDPOINT` | 否 | ModelScope 站点地址，默认 `https://modelscope.cn`；国际站填 `https://www.modelscope.ai` | — |
+
+> 本地运行时也可直接以环境变量形式导出（见下），不必写成 GitHub Secret。
+
 ## 本地使用
 
 ```bash
 pip install -r requirements.txt
 
-# ModelScope -> HuggingFace
+# ModelScope -> HuggingFace（不填 --repo-type 会自动判断类型）
 MODELSCOPE_TOKEN=xxx HF_TOKEN=yyy \
-python sync.py --direction ms2hf --repo-id owner/name --repo-type model
+python sync.py --direction ms2hf --repo-id owner/name
 
 # HuggingFace -> ModelScope
 MODELSCOPE_TOKEN=xxx HF_TOKEN=yyy \
-python sync.py --direction hf2ms --repo-id owner/name --repo-type dataset
+python sync.py --direction hf2ms --repo-id owner/name
 ```
 
 或者用命令行参数覆盖环境变量：
@@ -39,7 +53,7 @@ python sync.py --direction ms2hf --repo-id owner/name \
 | 参数 | 说明 |
 |------|------|
 | `--repo-id` | 源仓库 id，必须带命名空间，如 `owner/name` |
-| `--repo-type` | `model`（默认）或 `dataset` |
+| `--repo-type` | `model` / `dataset`，留空则自动判断 |
 | `--target-repo-id` | 目标仓库 id，留空则复用源 id（跨账号同步时必填，且需填你自己的命名空间） |
 | `--revision` | 分支 / 版本，留空用平台默认分支 |
 | `--private` | 目标仓库创建为私有 |
@@ -51,10 +65,7 @@ python sync.py --direction ms2hf --repo-id owner/name \
 ## GitHub Actions 使用
 
 1. 把本仓库推到 GitHub（公开或私有均可）。
-2. 在仓库 **Settings → Secrets and variables → Actions → New repository secret** 里添加：
-   - `MODELSCOPE_TOKEN`：ModelScope 访问令牌（我的 → 访问令牌）
-   - `HF_TOKEN`：HuggingFace token（Settings → Access Tokens）
-   - `MS_ENDPOINT`（可选）：默认 `https://modelscope.cn`，国际站填 `https://www.modelscope.ai`
+2. 按上表添加 Secrets：`MODELSCOPE_TOKEN`、`HF_TOKEN`（必填），`MS_ENDPOINT`（可选）。
 3. 进入仓库 **Actions → “Sync ModelScope <-> HuggingFace” → Run workflow**，
    在表单里选择 **方向**、填写 **项目名**（`owner/name`），按需填其他选项，点 **Run workflow**。
 
