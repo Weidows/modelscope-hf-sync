@@ -1,0 +1,8 @@
+# staging directory used by sync.py
+.sync_work/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
