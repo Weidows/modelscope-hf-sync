@@ -1,5 +1,7 @@
 # Sync ModelScope ↔ HuggingFace
 
+<img src="image/README/1789415369686.png" width="600">
+
 [![Fork me on GitHub](https://img.shields.io/badge/Fork%20me%20on-GitHub-181717?logo=github&style=for-the-badge)](https://github.com/Weidows/modelscope-hf-sync/fork)
 [![Sync workflow](https://github.com/Weidows/modelscope-hf-sync/actions/workflows/sync.yml/badge.svg)](https://github.com/Weidows/modelscope-hf-sync/actions/workflows/sync.yml)
 [![Python](https://img.shields.io/badge/python-3.11+-blue?logo=python&logoColor=white)](https://www.python.org)
